@@ -1,38 +1,43 @@
 import requests 
 import time
 import csv
-import logging
 
 from pathlib import Path
+from urllib.parse import urlparse 
 from config import VT_API_KEY
 
-
+timer_gap = 2
 directory_path = Path("C:/Users/Admin/Downloads/")
 
+def read_file() -> tuple[list[str], int]:
+    
+    url_list =[]
+    unique_urls = []
 
-def read_file():
     for file_path in directory_path.glob("*Voluum landers*"):
-        logging.info(f"processing file: {file_path}")
 
-        with file_path.open(mode="r", encoding="utf-8") as csv_file:
-            csv_reader = csv.reader(csv_file)
+        with file_path.open(mode="r", encoding="utf-8") as file:
+            csv_reader = csv.reader(file)
 
-            url_list = []
-
-            header = next(csv_reader)
-            lander_url_index = header.index("Lander URL")
-            clicks_index = header.index("Clicks")
+            next(csv_reader)
 
             for row in csv_reader:
-                lander_url = row[lander_url_index]
-                clicks = int(row[clicks_index])
+                url, clicks = row
+                clicks = int(clicks)
+
                 if clicks >= 1:
-                    url_list.append(lander_url)
-                    
-            print(f"URLs to check {len(url_list)}, approximate minutes {15 * len(url_list) / 60}")
+                    domain = urlparse(url).netloc
 
-    return url_list
+                    if domain not in unique_urls:
+                        unique_urls.append(domain)
+                        url_list.append(url)
 
+            exec_time = len(url_list) * timer_gap
+            minutes, seconds = divmod(exec_time, 60)
+
+        print(f"URLs to check {len(url_list)}, approximate time {minutes:02d}:{seconds:02d}")
+
+    return url_list, exec_time
 
 def scan_url(url):
     api_url = "https://www.virustotal.com/api/v3/urls"
@@ -68,14 +73,46 @@ def analys_url(analyses_id):
 
 def analyze_domains():
 
-    url_scan_list = read_file()    
+    countdown_timer()
+
+    url_scan_list = read_file()[0]
+    flagged_urls = {}
+    clear_urls = {}
 
     for url in url_scan_list:
-        analys_id = scan_url(url)
+        
+        analys_id = scan_url(url) 
+        time.sleep(timer_gap)
+        result = int(analys_url(analys_id))
 
-        # print(f"Analys of {url} successfully submit")
-        time.sleep(15)
-        result = analys_url(analys_id)
-        print(f"{url} - {result}")
+        if result <= 3:
+            clear_urls.update({url: result})
+        else:
+            flagged_urls.update({url: result})
+
+    print(f"{len(flagged_urls)} flagged URLs:")
+    for url, result in flagged_urls.items():
+            print(f"{url} - {result}")
+
+    print(f"{len(clear_urls)} Clear URLs:")
+    for url, result in clear_urls.items():
+            print(f"{url} - {result}")
+
+
+def countdown_timer():
+    execution_time = read_file()[1]
+
+    start_time = time.time()
+    end_time = start_time + execution_time
+
+    while time.time() < end_time:
+        remaining_time = int(end_time - time.time())
+        minutes, seconds = divmod(remaining_time, 60)
+        print(f"Time remaing: {minutes:02d}:{seconds:02d}", end="\r", flush=True)
+        time.sleep(1)
+    
+    print("Scanning complete")
 
 analyze_domains()
+
+
