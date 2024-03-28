@@ -1,13 +1,38 @@
-import requests
+import requests 
 import time
+import csv
+import logging
 
+from pathlib import Path
 from config import VT_API_KEY
 
-scan_gap = 15
 
-url_list = [
-    "https://www.virustotal.com/"
-]
+directory_path = Path("C:/Users/Admin/Downloads/")
+
+
+def read_file():
+    for file_path in directory_path.glob("*Voluum landers*"):
+        logging.info(f"processing file: {file_path}")
+
+        with file_path.open(mode="r", encoding="utf-8") as csv_file:
+            csv_reader = csv.reader(csv_file)
+
+            url_list = []
+
+            header = next(csv_reader)
+            lander_url_index = header.index("Lander URL")
+            clicks_index = header.index("Clicks")
+
+            for row in csv_reader:
+                lander_url = row[lander_url_index]
+                clicks = int(row[clicks_index])
+                if clicks >= 1:
+                    url_list.append(lander_url)
+                    
+            print(f"URLs to check {len(url_list)}, approximate minutes {15 * len(url_list) / 60}")
+
+    return url_list
+
 
 def scan_url(url):
     api_url = "https://www.virustotal.com/api/v3/urls"
@@ -41,17 +66,16 @@ def analys_url(analyses_id):
     return malicious_analys
 
 
-def analyze_domains(url_scan_list):    
+def analyze_domains():
+
+    url_scan_list = read_file()    
 
     for url in url_scan_list:
         analys_id = scan_url(url)
+
         # print(f"Analys of {url} successfully submit")
-
-        time.sleep(scan_gap)
+        time.sleep(15)
         result = analys_url(analys_id)
-
         print(f"{url} - {result}")
 
-analyze_domains(url_list)
-
-
+analyze_domains()
