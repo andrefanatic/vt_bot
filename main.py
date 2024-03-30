@@ -6,15 +6,16 @@ from pathlib import Path
 from urllib.parse import urlparse 
 from config import VT_API_KEY
 
-timer_gap = 2
+timer_gap = 15 # seconds
+file_name_pattern = "*Voluum landers*"
 directory_path = Path("C:/Users/Admin/Downloads/")
 
-def read_file() -> tuple[list[str], int]:
-    
+
+def read_file():
     url_list =[]
     unique_urls = []
 
-    for file_path in directory_path.glob("*Voluum landers*"):
+    for file_path in directory_path.glob(file_name_pattern):
 
         with file_path.open(mode="r", encoding="utf-8") as file:
             csv_reader = csv.reader(file)
@@ -32,12 +33,8 @@ def read_file() -> tuple[list[str], int]:
                         unique_urls.append(domain)
                         url_list.append(url)
 
-            exec_time = len(url_list) * timer_gap
-            minutes, seconds = divmod(exec_time, 60)
+    return url_list
 
-        print(f"URLs to check {len(url_list)}, approximate time {minutes:02d}:{seconds:02d}")
-
-    return url_list, exec_time
 
 def scan_url(url):
     api_url = "https://www.virustotal.com/api/v3/urls"
@@ -50,7 +47,7 @@ def scan_url(url):
     }
 
     response_scan = requests.post(api_url, data=payload_scan, headers=headers_scan)
-    scan_result = response_scan.json() # нужно узнать про метод .get у requests lib, для более быстрого парсинга json файла
+    scan_result = response_scan.json()
     analyses_id = scan_result["data"]["id"]
 
     return analyses_id
@@ -72,10 +69,10 @@ def analys_url(analyses_id):
 
 
 def analyze_domains():
-
     countdown_timer()
 
-    url_scan_list = read_file()[0]
+    url_scan_list = read_file()
+
     flagged_urls = {}
     clear_urls = {}
 
@@ -90,7 +87,7 @@ def analyze_domains():
         else:
             flagged_urls.update({url: result})
 
-    print(f"{len(flagged_urls)} flagged URLs:")
+    print(f"{len(flagged_urls)} Flagged URLs:")
     for url, result in flagged_urls.items():
             print(f"{url} - {result}")
 
@@ -100,7 +97,11 @@ def analyze_domains():
 
 
 def countdown_timer():
-    execution_time = read_file()[1]
+
+    len_scan_list = len(read_file())
+    execution_time =  len_scan_list * timer_gap
+
+    print(f"URLs to check {len_scan_list}")
 
     start_time = time.time()
     end_time = start_time + execution_time
@@ -112,6 +113,8 @@ def countdown_timer():
         time.sleep(1)
     
     print("Scanning complete")
+
+# countdown_timer()
 
 analyze_domains()
 
