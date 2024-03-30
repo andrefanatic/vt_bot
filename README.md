@@ -4,7 +4,7 @@ This app uses VirusTotal API to check URLs from CSV files.
 How it works:
 
 Read File: It reads CSV files from a directory, extracts "Lander URL" and "Clicks" columns, and adds URLs with unique domains clicks to a list. 
-* Test version of the filter to avoid scanning ULRs that have no traffic.
+Test version of the filter to avoid scanning ULRs that have no traffic.
 
 Scan URL: It sends URLs to VirusTotal API and gets back an analysis ID. After 15 seconds(due to VT API quota, 4 lookups for 1 minute), it checks the analysis status and then gets the analysis result including malicious detections.
 
