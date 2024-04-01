@@ -1,6 +1,7 @@
 import requests 
 import time
 import csv
+import logging
 
 from pathlib import Path
 from urllib.parse import urlparse 
@@ -69,15 +70,17 @@ def analys_url(analyses_id):
 
 
 def analyze_domains():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     countdown_timer()
 
     url_scan_list = read_file()
 
     flagged_urls = {}
     clear_urls = {}
-
+    
     for url in url_scan_list:
-        
+        logging.info(f"Scanning URL: {url}")
+
         analys_id = scan_url(url) 
         time.sleep(timer_gap)
         result = int(analys_url(analys_id))
@@ -97,6 +100,7 @@ def analyze_domains():
 
 
 def countdown_timer():
+    logging.info("Started timer")
 
     len_scan_list = len(read_file())
     execution_time =  len_scan_list * timer_gap
@@ -114,8 +118,7 @@ def countdown_timer():
     
     print("Scanning complete")
 
-# countdown_timer()
-
-analyze_domains()
-
+    
+if __name__ == "__main__":
+    analyze_domains()
 
