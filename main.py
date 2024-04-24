@@ -34,6 +34,9 @@ def read_file():
                         unique_urls.append(domain)
                         url_list.append(url)
 
+            min, sec = divmod(len(unique_urls) * timer_gap, 60)
+            print(f"Urls to check: {len(unique_urls)}, execution time: {min:02d}:{sec:02d}")
+
     return url_list
 
 
@@ -71,7 +74,7 @@ def analys_url(analyses_id):
 
 def analyze_domains():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    countdown_timer()
+    #countdown_timer()
 
     url_scan_list = read_file()
 
